@@ -1,0 +1,226 @@
+ARTS: Automated Randomization of multiple Traits for Study design
+Written by Mark Maienschein-Cline
+mmaiensc@gmail.com
+Center for Research Informatics
+University of Illinois at Chicago
+
+ARTS uses a genetic algorithm to optimize (minimize) a mutual information-based objective function, obtaining
+an optimal randomization for studies of arbitrary size and design.
+
+The publication for this code is in preparation; citation to be added soon (hopefully!). When it is published,
+the section of the supplementary information will give more details about usage (in addition to what's below).
+
+Please contact me at the email above with questions.
+
+
+
+There are two ways of using this code: command-line (it's a perl script), or through Galaxy.
+
+You can learn about, and download, Galaxy at http://galaxyproject.org.
+
+################
+# INSTALLATION #
+################
+
+#
+# Command line version:
+#
+No installation needed, as long as you have a perl interpreter. Should work fine on a Mac or Linux system;
+probably fine on Windows, but I haven't tested it.
+
+#
+# Galaxy version:
+#
+Two options:
+1) You can download this tool from the Galaxy toolshed directly into your installation.
+2) Move the ARTS.pl and .xml files into tools/ in your Galaxy distribution, and edit the tool_config file
+appropriately. If you don't know how to do this, you should probably use strategy #1.
+
+###########
+# RUNNING #
+###########
+
+#
+# Galaxy version
+#
+Once you get the tools installed in Galaxy, there are help sections in the tool descriptions you can refer to.
+Also refer to the instructions for the command-line version below.
+
+#
+# Command line version:
+#
+
+Run ARTS.pl without any inputs to see the usage. All inputs are specified using the usual [-flag] [value]
+syntax (i.e., -i input.txt).
+
+Sample command using the sample_data.txt file:
+./ARTS.pl -i sample_data.txt -c "2,3,4,5;2;3;4;5" -b 10 -o batched_data.txt -cc 2,4 -cd 4
+
+
+More information about the inputs (*'ed remarks refer to the values in the sample command above):
+
+-i  Input trait table: tab-delimited table, including 1 header line. See sample_data.txt for an example.
+    You can prepare this table in Excel and save as a tab-delimited text, or just write it in a text file,
+    or copy-paste from Excel to a text file. You can have more columns than you will actually care about
+    randomizing here.
+    * You can use the file sample_data.txt as an example input; there are 5 columns, Sample ID, Age, Sex,
+      Collection Date, and Disease.
+
+-c  Trait columns to randomize. This is a comma- and semicolon-delimited list. Its syntax is important,
+    so pay attention.
+    Columns are numbered starting from 1. Traits that should be considered jointly should be listed together
+    separated by commas. Each set of jointly considered traits should be listed separated by semicolons. Hence,
+    * -c "2,3,4,5;2;3;4;5" says to consider all the traits (columns 2-5) jointly (that's the 2,3,4,5 part), AND
+      to consider each trait individually (that's the ;2;3;4;5 part).
+    You could opt to only consider traits individually (-c "2;3;4;5"), or only jointly (-c "2,3,4,5"), or only
+    pair-wise (-c "2,3;2,4;2,5;3,4;3,5;4,5"), or whatever you want.
+    OUR GENERAL-PURPOSE RECOMMENDATION is to consider all traits jointly, plus all individually, as in the sample
+    command. This corresponds to the MMI statistic discussed in the publication.
+    GALAXY USERS: you just get to select the columns to consider, and the script will use the MMI statistic 
+    automatically (you don't get a choice).
+    FINAL NOTE: you should put quotes around the value here, since otherwise semicolons will be interpreted
+    as end-of-line characters.
+
+-b  Batch size (number of samples that can be processed at the same time). You have two options:
+    1) Enter a single number. This will fill as many complete batches as possible, and put the remainder into a smaller
+       batch. This is probably convenient, but you should do a quick count to make sure you don't end up with a really
+       small last batch (e.g., if you have 105 samples and do batch size of 25, your last batch will only have 5 samples).
+    2) Enter a comma-delimited list that adds up to the number of samples, which allows for uneven batch sizes
+       For example, -b 10,10,9,9 for 38 samples. If your math doesn't add up, the program will exit and let you know.
+    * sample_data.txt has 30 samples, so "-b 10" makes 3 batches of 10 samples each.
+
+-o  Output file. Self-explanatory. The batch assignments are added as an extra column on the end, otherwise looks
+    like the input.
+    * batched_data.txt is our output file.
+
+-p  (sort-of optional: you MUST use both -b and -o, OR just -p) Print (to STDOUT) the statistics of a batched
+    run using this column. The result will look like the last part of the STDOUT from an ARTS run (see below),
+    but you can use this option for testing batch assignments from another algorithm, or if you did one by hand.
+
+-cc Indices of continuously-valued columns. ARTS uses discrete values for its statistics, so these columns must
+    be discretized (binned). If ARTS encounters a column with more than 20 values, it will generate a warning asking
+    if you want it to be continuous. Comma-delimited list.
+    * In sample_data.txt, columns 2 (age) and 4 (date) could be considered continuous (that is, it's worth treating 
+      a 35 year-old similarly to a 36 year-old), so we set "-cc 2,4".
+
+-cd Date-valued columns. These columns should also be listed under -cc, but this lets ARTS know to expect a date
+    (format MUST be M/D/Y, where month is a number (1 instead of January)) and convert the date to a number before
+    binning.
+    * In sample_data.txt, column 4 is a date, so set "-cd 4".
+
+-cb Number of bins to use for discretizing the continuous columns. Again, you can set a single value, or give a comma-
+    delimited list, which will match the order of the list given in the -cc flag.
+    * For the sample run, we left the default value of 5, but we could do, for example, "-cb 5,7", which would bin 
+      the ages into 5 bins and the dates into 7 bins (since we set "-cc 2,4", and column 2 was age, column 4 was date).
+
+-bn Name for the batch column added to the output. Default is "batch".
+
+-s  Random number seed. Set as a large negative integer. The code always uses the same seed, but if you want to 
+    rerun with a different seed you can use this option.
+
+----------------------------------------------
+
+When you run the sample command, the STDOUT looks like this (I added the N) line numbers):
+
+"""""""""""""""""""
+1)  Using traits:	Age	Sex	Collection date	Disease
+2)  Using trait combinations:	{Age,Sex,Collection date,Disease}	{Age}	{Sex}	{Collection date}	{Disease}
+3)    Generation 1 of 300, average fitness 0.1432
+4)    Generation 2 of 300, average fitness 0.1342
+5)    Generation 3 of 300, average fitness 0.1298
+6)    Generation 4 of 300, average fitness 0.1279
+7)    Generation 5 of 300, average fitness 0.1250
+8)    Generation 6 of 300, average fitness 0.1227
+9)    Generation 7 of 300, average fitness 0.1211
+10)   Generation 8 of 300, average fitness 0.1194
+11)   Generation 9 of 300, average fitness 0.1187
+12)   Generation 10 of 300, average fitness 0.1181
+13)   Generation 11 of 300, average fitness 0.1175
+14)   Generation 12 of 300, average fitness 0.1165
+15)   Generation 13 of 300, average fitness 0.1143
+16)   Generation 14 of 300, average fitness 0.1133
+17)   Generation 15 of 300, average fitness 0.1132
+18)   Generation 16 of 300, average fitness 0.1127
+19)   Generation 17 of 300, average fitness 0.1123
+20)   Generation 18 of 300, average fitness 0.1116
+21)   Generation 19 of 300, average fitness 0.1119
+22)   Generation 20 of 300, average fitness 0.1113
+23)   Generation 21 of 300, average fitness 0.1113
+24)   Generation 22 of 300, average fitness 0.1110
+25)   Generation 23 of 300, average fitness 0.1110
+26) Final MI 0.1045 ; Individual trait MIs (mean 0.0091 ): 	0.0155	0.0000	0.0209	0.0000
+27) -----------------------------------------------------------------
+28) 	Age values					Sex values		Collection date values					Disease values	
+29) Batch (size)	19-27.2	35.4-43.6	51.8-60	43.6-51.8	27.2-35.4	M	F	2/26/2012-11/11/2012	11/11/2012-7/27/2013	6/14/2011-2/26/2012	9/29/2010-6/14/2011	1/15/2010-9/29/2010	Y	N
+30) -------	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------
+31) 1 (10)	2	2	2	1	3	5	5	3	2	2	2	1	5	5
+32) 2 (10)	2	2	1	2	3	5	5	2	2	4	1	1	5	5
+33) 3 (10)	3	2	1	1	3	5	5	3	2	2	2	1	5	5
+34) -------	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------
+35) Total	7	6	4	4	9	15	15	8	6	8	5	3	15	15
+"""""""""""""""""""
+
+Here's what the lines mean:
+1)  Tells you what traits you've selected.
+2)  Tells you what trait combinations you've selected.
+3-25) Prints the progress for each generation of the GA. Converges when average fitness changes by less than 0.0001.
+26) Final objective function value. Normalized between 0 and 1, ideal case is 0. Note that different choices of the
+    objective function ARE NOT COMPARABLE: if you select fewer traits, or simpler combinations of traits (fewer
+    joint traits) using different -c values, you will get lower MI values, but this does not necessarily indicate better
+    overall randomization, because your choices may be overly simplistic. This is why we recommend sticking with the 
+    MMI definition (all joint + all individual) consistently. This line also gives the randomization values for all 
+    individual traits.
+27-24) Inividual trait counts per batch for different values. Continuously-valued columns are given as a range
+    (e.g., age 19-27.2).
+35) Total number of traits in each bin over all samples.
+
+----------------------------------------------
+
+The output, batched_data.txt, will look like this:
+
+"""""""""""""""""""
+Sample ID       Age     Sex     Collection date Disease batch
+sample1 25      M       3/28/2012       Y       3
+sample2 37      F       4/27/2013       N       3
+sample3 36      F       3/10/2013       N       1
+sample4 52      M       7/1/2012        Y       1
+sample5 48      M       8/13/2011       Y       3
+sample6 60      M       9/21/2011       N       3
+sample7 31      F       10/22/2010      Y       3
+sample8 28      F       1/15/2010       N       2
+sample9 26      M       1/7/2012        N       1
+sample10        44      F       4/5/2012        Y       1
+sample11        33      M       5/18/2012       N       3
+sample12        25      F       7/27/2013       N       3
+sample13        28      M       1/20/2013       Y       2
+sample14        30      F       8/11/2012       Y       3
+sample15        51      M       11/23/2011      N       2
+sample16        22      M       12/21/2011      N       2
+sample17        28      M       9/26/2010       Y       1
+sample18        19      F       1/18/2010       Y       3
+sample19        35      M       2/10/2012       N       1
+sample20        38      F       2/17/2012       N       2
+sample21        25      F       4/28/2012       Y       1
+sample22        55      M       1/7/2013        Y       2
+sample23        33      F       6/30/2013       N       1
+sample24        24      M       7/1/2012        Y       2
+sample25        42      M       2/15/2011       N       3
+sample26        60      M       5/21/2011       N       1
+sample27        34      F       10/23/2010      Y       2
+sample28        37      F       12/18/2010      Y       1
+sample29        41      F       11/7/2012       N       2
+sample30        50      F       2/15/2012       Y       2
+"""""""""""""""""""
+
+Looks the same as the input file, with a sixth column titled "batch" added, saying which of the three
+batches each sample should be processed in (of course, you can permute the order of batches if you want).
+
+
+
+
+
+
+
+
+
+

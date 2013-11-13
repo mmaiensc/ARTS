@@ -1,0 +1,110 @@
+<tool id="ARTS" name="ARTS">
+  <description>automated study randomization</description>
+  <command interpreter="perl">ARTS.pl -i $input -o $out -b $batch -c "$column" -cc $conts -cd $dates -cb $bins -bn $bname -s $seed -mmi -v l </command>
+  <inputs>
+    <param name="input" type="data" format="tabular" label="Input traits per sample" help="Ensure input is formatted as tabular"/>
+    <param name="batch" type="text" size="40" label="Batch size" optional="False" help="Set to a single number, or a comma-delimited list"/>
+    <param name="column" type="data_column" data_ref="input" multiple="True" numerical="False" label="Trait columns to randomize" help="Multi-select list - hold the appropriate key while clicking to select multiple columns." />
+    <param name="conts" type="data_column" data_ref="input" multiple="True" numerical="False" optional="True" label="Continuous- and date-valued columns for binning (if any)" help="Multi-select list. Values should be numbers." />
+    <param name="dates" type="data_column" data_ref="input" multiple="True" numerical="False" optional="True" label="Date-valued columns for binning (if any)" help="Multi-select list. Dates should be M/D/Y, where M, D, and Y are all integers (e.g., 7/9/1985)." />
+    <param name="bins" type="text" size="40" label="Bin sizes (for continuously-valued columns)" value="5" optional="False" help="Set to a single number, or a comma-delimited list. If given as a list, will be used in same order as continuous columns."/>
+    <param name="bname" type="text" size="40" label="Batch name" value="batch" optional="False" help="Name given to the batch column in the output."/>
+    <param name="seed" type="integer" size="40" label="Random number seed" optional="False" value="-123456789"/>
+  </inputs>
+  <outputs>
+    <data format="tabular" name="out" />
+  </outputs>
+  <help>
+  
+**Purpose**
+
+This tool completes automated study randomization for a selected number of traits over the samples in your data set by minimizing a mutual information-based objective function using a genetic algorithm.
+
+NOTE: in the history output, click the i (view details) icon (between the save-to-disk and rerun icons), then click on stdout to see a summary of the run. This allows you to confirm which traits are being considered, and gives you a snapshot of how randomized individual traits are (it does not inform you about combinations of traits, which ARE ALSO being randomized).
+
+-----
+
+**Input traits per sample**
+
+- A list of traits associated with each sample, including a header line giving the name of each type of trait. For example::
+     
+       ID      Sex    Age  Sample date  Diseased
+       Sample1   M     15     6/7/2011         Y
+       Sample2   M     25     8/5/2012         Y
+       Sample3   F     23    1/30/2012         N
+       Sample4   F     45     4/1/2013         N
+       Sample5   M     52    3/21/2011         Y
+       Sample6   F     37    3/12/2013         N
+       Sample7   M     31    7/17/2011         N
+
+-----
+
+**Batch size**
+
+- The size of each batch. You can specify this with a single number (e.g., 50), or a list of numbers (separated by commas, for example 50,50,49,49.
+
+- The first choice will fill up full batches as much as possible, and put all remaining samples in a smaller batch. Thus, the latter choice may be better if the batch size does not evenly divide the number of samples. For example, lets say you have 105 samples and can do a batch size of up to 30. Then::
+
+       (First option)  Batch size = 30 --> batch sizes of 30, 30, 30, and 15
+        -or-
+       (Second option) Batch size = 27,26,26,26
+     
+The second option has a more evenly distributed batch size, and will give better results.
+
+-----
+
+**Traits to randomize**
+
+- Which traits should be randomized. On Macs, hold command to multi-select. You do not need to select all columns (it would be silly, for example, to randomize over sample ID).
+
+- Note missing values for traits will be treated as an additional trait value (i.e., empty).
+
+- For the example above, we would select c2, c3, c4, and c5 (Sex, Age, Sample date, and Diseased). Not all traits need be selected, just the relevant ones (we may not care about Sample date, for example).
+
+-----
+
+**Continuous- and date-valued columns (optional)**
+
+- Use if you have columns with continuous values (e.g., age, blood pressure) or dates. They will be discretized prior to running.
+
+- For the example above, we would select c3 and c4 (Age, Sample date).
+
+-----
+
+**Date-valued columns (optional)**
+
+- Use if any of the columns selected as continuous are dates (MUST be formatted M/D/Y, where month is a number, for example 7/9/1985).
+
+- For the example above, we would select c4 (Sample date).
+
+-----
+
+**Bin sizes**
+
+- This only relates to any columns selected as continuous, and determines how many discrete bins the data will be split up in to.
+
+- You can set it to a single number, and all columns will use that number of bins. Or you can set it to a list of numbers to specify a different number of bins for each column.
+
+- For the example above, where we selected c3 and c4 as continuous, we could set::
+ 
+      Bin sizes=5,6
+
+- which would split the Age column (c3) into 5 bins, and the Sample date column (c4) into 6 bins.
+
+-----
+
+**Batch name**
+
+- The output file will look exactly the same as the input, except an additional column will be added indicated which batch each sample should belong to. You can specify the name of that column here.
+
+-----
+
+**Random number seed**
+
+- This will not be need to be changed in general, but if you want to force the use of a different seed, you can.
+
+
+
+
+</help>
+</tool>

@@ -1,0 +1,84 @@
+<tool id="ARTSscore" name="ARTS Score">
+  <description>compute the score for a study randomization</description>
+  <command interpreter="perl">ARTS.pl -i $input -p $batch -c "$column" -cc $conts -cd $dates -cb $bins -mmi -v l > $out </command>
+  <inputs>
+    <param name="input" type="data" format="tabular" label="Input traits per sample" help="Ensure input is formatted as tabular"/>
+    <param name="batch" type="data_column" data_ref="input" multiple="False" numerical="False" label="Batch column to use" help="Select which column corresponds to the batching you want to score." />
+    <param name="column" type="data_column" data_ref="input" multiple="True" numerical="False" label="Trait columns" help="Multi-select list - hold the appropriate key while clicking to select multiple columns." />
+    <param name="conts" type="data_column" data_ref="input" multiple="True" numerical="False" optional="True" label="Continuous- and date-valued columns for binning (if any)" help="Multi-select list. Values should be numbers." />
+    <param name="dates" type="data_column" data_ref="input" multiple="True" numerical="False" optional="True" label="Date-valued columns for binning (if any)" help="Multi-select list. Dates should be M/D/Y, where M, D, and Y are all integers (e.g., 7/9/1985)." />
+    <param name="bins" type="text" size="40" label="Bin sizes (for continuously-valued columns)" value="5" optional="False" help="Set to a single number, or a comma-delimited list. If given as a list, will be used in same order as continuous columns."/>
+  </inputs>
+  <outputs>
+    <data format="tabular" name="out" />
+  </outputs>
+  <help>
+  
+**Purpose**
+
+This tool computes the score for a completed study randomization (e.g., by ARTS) for a selected number of traits over the samples in your data, and a particular column giving the batch assignments. The output here is identical to the stdout obtained from a standard ARTS run.
+
+-----
+
+**Input traits per sample**
+
+- A list of traits associated with each sample, including a header line giving the name of each type of trait, and a batch column. For example::
+     
+       ID      Sex    Age  Sample date  Diseased  Batch
+       Sample1   M     15     6/7/2011         Y      1
+       Sample2   M     25     8/5/2012         Y      2
+       Sample3   F     23    1/30/2012         N      1
+       Sample4   F     45     4/1/2013         N      1
+       Sample5   M     52    3/21/2011         Y      2
+       Sample6   F     37    3/12/2013         N      2
+       Sample7   M     31    7/17/2011         N      2
+
+-----
+
+**Batch column to use**
+
+- Which column indicate the batch assignment. In the example above, this would be c6 (batch).
+
+-----
+
+**Traits to randomize**
+
+- Which traits should be randomized. On Macs, hold command to multi-select. You do not need to select all columns (it would be silly, for example, to randomize over sample ID).
+
+- Note missing values for traits will be treated as an additional trait value (i.e., empty).
+
+- For the example above, we would select c2, c3, c4, and c5 (Sex, Age, Sample date, and Diseased). Not all traits need be selected, just the relevant ones (we may not care about Sample date, for example).
+
+-----
+
+**Continuous- and date-valued columns (optional)**
+
+- Use if you have columns with continuous values (e.g., age, blood pressure) or dates. They will be discretized prior to running.
+
+- For the example above, we would select c3 and c4 (Age, Sample date).
+
+-----
+
+**Date-valued columns (optional)**
+
+- Use if any of the columns selected as continuous are dates (MUST be formatted M/D/Y, where month is a number, for example 7/9/1985).
+
+- For the example above, we would select c4 (Sample date).
+
+-----
+
+**Bin sizes**
+
+- This only relates to any columns selected as continuous, and determines how many discrete bins the data will be split up in to.
+
+- You can set it to a single number, and all columns will use that number of bins. Or you can set it to a list of numbers to specify a different number of bins for each column.
+
+- For the example above, where we selected c3 and c4 as continuous, we could set::
+ 
+      Bin sizes=5,6
+
+- which would split the Age column (c3) into 5 bins, and the Sample date column (c4) into 6 bins.
+
+
+</help>
+</tool>
