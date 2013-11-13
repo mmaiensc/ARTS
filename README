@@ -215,6 +215,7 @@ sample30        50      F       2/15/2012       Y       2
 Looks the same as the input file, with a sixth column titled "batch" added, saying which of the three
 batches each sample should be processed in (of course, you can permute the order of batches if you want).
 
+Included file batched_data.txt is what the output should look like.
 
 
 
