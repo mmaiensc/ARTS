@@ -7,8 +7,10 @@ University of Illinois at Chicago
 ARTS uses a genetic algorithm to optimize (minimize) a mutual information-based objective function, obtaining
 an optimal randomization for studies of arbitrary size and design.
 
-The publication for this code is in preparation; citation to be added soon (hopefully!). When it is published,
-the section of the supplementary information will give more details about usage (in addition to what's below).
+If using this method, please cite:
+M Maienschein-Cline, Z Lei, V Gardeux, T Abbasi, RF Machado, V Gordeuk, AA Desai, S Saraf, N Bahroos, and Y Lussier. ARTS: automated randomization of multiple traits for study design. Bioinformatics, 2014. doi: 10.1093/bioinformatics/btu075
+
+Section S5 of the supplement for the above publication gives more details about usage (in addition to what's below).
 
 Please contact me at the email above with questions.
 
